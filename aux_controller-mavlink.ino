@@ -12,6 +12,7 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 
 #include "mavlink/common/mavlink.h"
 #include "mavlink/common/mavlink_msg_rc_channels.h"
+#include "mavlink/common/mavlink_msg_servo_output_raw.h"
 //UART Serial2(4, 5, 0, 0);
 unsigned long previousMillis = 0;        // will store last time LED was updated
 const long interval = 3000;           // interval at which to blink (milliseconds)
@@ -43,19 +44,23 @@ NeoPixelConnect p(16, 1, pio0, 0);
 */
 // used pins
 
-#define sound           1
-#define soundthrottle   2
-#define lights          3
+#define sound           0
+#define soundthrottle   1
+#define lights          2
+#define crane           3
+
 #define campan          4
-
 #define camswitch       5
-#define underlight      6
-#define smoke           7
-#define smokethrottle   8
+#define fwinch          6
+#define twinch          7
 
-#define fwinch          9
-#define twinch          10
-#define crane           11
+#define underlight      8
+#define smokethrottle   9
+#define smoke           10
+
+
+
+
 
 
 int ch1  = 0;
@@ -75,7 +80,11 @@ int ch14 = 0;
 int ch15 = 0;
 int ch16 = 0;
 
-#define soundbusy        0
+#define soundbusy        29
+#define sound1           28
+#define sound2           27
+#define sound3           26
+
 int soundon = 0;
 
 #define PWMHigh 2000
@@ -129,8 +138,12 @@ void setup()
 
   p.neoPixelFill(255, 0, 0, true);
 
-  pinMode (soundbusy, INPUT);
+  pinMode(soundbusy, INPUT);
   pinMode(ledPin, OUTPUT);
+
+  pinMode(sound1, OUTPUT);
+  pinMode(sound2, OUTPUT);
+  pinMode(sound3, OUTPUT);
 
   //set startup positions
   pwm.writeMicroseconds(sound, PWMLow);
@@ -166,76 +179,79 @@ void loop() {
   Serial.println(ch7);
   FUNCTION =  (ch7);
 
-  if (FUNCTION <= 990) {
-    pwm.writeMicroseconds(fwinch, PWMMid);
-    pwm.writeMicroseconds(twinch, PWMMid);
-    // Serial.println(channels[16]);
+  if (FUNCTION <= 1000) {
+    pwm.writeMicroseconds(fwinch, 1300);
+    pwm.writeMicroseconds(twinch, 1300);
+    digitalWrite(sound1, LOW);
+    digitalWrite(sound2, LOW);
+    digitalWrite(sound3, LOW);
+   Serial.println("IDLE");
 
   }
-  if (FUNCTION > 1045 && FUNCTION < 1055) {
+  if (FUNCTION > 1055 && FUNCTION < 1065) {
 
     Serial.println("SMOKE OFF");
     pwm.writeMicroseconds(smoke, PWMLow);
     THRM = 0;
     //   Serial.println(channels[16]);
   }
-  if (FUNCTION > 1070 && FUNCTION < 1080) {
+  if (FUNCTION > 1076 && FUNCTION < 1096) {
     THRM = 1;
     Serial.println("SMOKE FULL");
     pwm.writeMicroseconds(smoke, PWMHigh);
     //  Serial.println(channels[16]);
 
   }
-  if (FUNCTION > 1090 && FUNCTION < 1115) {
+  if (FUNCTION > 1110 && FUNCTION < 1125) {
     THRM = 2;
     Serial.println("SMOKE THRM");
     pwm.writeMicroseconds(smoke, PWMHigh);
     //  Serial.println(channels[16]);
 
   }
-  if (FUNCTION > 1165 && FUNCTION < 1180) {
+  if (FUNCTION > 1170 && FUNCTION < 1190) {
     pwm.writeMicroseconds(sound, PWMLow);
     Serial.println("SOUND OFF");
     //   Serial.println(channels[16]);
   }
-  if (FUNCTION > 1210 && FUNCTION < 1235) {
+  if (FUNCTION > 1220 && FUNCTION < 1240) {
     pwm.writeMicroseconds(sound, PWMHigh);
     Serial.println("SOUND IDLE");
     THRO = 1;
     //  Serial.println(channels[16]);
   }
-  if (FUNCTION > 1270 && FUNCTION < 1280) {
+  if (FUNCTION > 1270 && FUNCTION < 1290) {
     pwm.writeMicroseconds(sound, PWMHigh);
     Serial.println("SOUND THRM");
     THRO = 2;
     //   Serial.println(channels[16]);
   }
-  if (FUNCTION > 1320 && FUNCTION < 1330) {
+  if (FUNCTION > 1320 && FUNCTION < 1335) {
     pwm.writeMicroseconds(lights, PWMLow);
     Serial.println("Lights OFF");
-    //   Serial.println(channels[16]);
+       Serial.println(channels[16]);
   }
-  if (FUNCTION > 1370 && FUNCTION < 1380) {
+  if (FUNCTION > 1370 && FUNCTION < 1390) {
     pwm.writeMicroseconds(lights, PWMHigh);
     Serial.println("Lights ON");
-    //  Serial.println(channels[16]);
+      Serial.println(channels[16]);
   }
-  if (FUNCTION > 1520 && FUNCTION < 1540) {
-    pwm.writeMicroseconds(fwinch, PWMHigh);
+  if (FUNCTION > 1425 && FUNCTION < 1435) {
+    pwm.writeMicroseconds(fwinch, 1500);
     Serial.println("Anchor Winch UP");
     //  Serial.println(channels[16]);
   }
-  if (FUNCTION > 1570 && FUNCTION < 1590) {
-    pwm.writeMicroseconds(fwinch, PWMLow);
+  if (FUNCTION > 1480 && FUNCTION < 1490) {
+    pwm.writeMicroseconds(fwinch, 1100);
     Serial.println("Anchor Winch down");
     //  Serial.println(channels[16]);
   }
-  if (FUNCTION > 1420 && FUNCTION < 1440) {
+  if (FUNCTION > 1525 && FUNCTION < 1535) {
     pwm.writeMicroseconds(twinch, PWMHigh);
     Serial.println("Tow Winch UP");
     //Serial.println(channels[16]);
   }
-  if (FUNCTION > 1470 && FUNCTION < 1490) {
+  if (FUNCTION > 1575 && FUNCTION < 1585) {
     pwm.writeMicroseconds(twinch, PWMLow);
     Serial.println("Tow Winch down");
     //    Serial.println(channels[16]);
@@ -244,26 +260,21 @@ void loop() {
 
   soundon = digitalRead(soundbusy);
 
-  if (soundon = 1) {
+  if (soundon = LOW) {
 
-    if (FUNCTION > 1590 && FUNCTION < 1605) {
+    if (FUNCTION > 1600 && FUNCTION < 1610) {
       Serial.println("HORN 1");
-      Serial.println(channels[16]);
+      digitalWrite(sound1, HIGH);  // toggle state
     }
-    if (FUNCTION > 1605 && FUNCTION < 1615) {
+    if (FUNCTION > 1610 && FUNCTION < 1620) {
 
       Serial.println("HORN 2");
-      Serial.println(channels[16]);
+      digitalWrite(sound2, HIGH);  // toggle state
     }
-    if (FUNCTION > 1617 && FUNCTION < 1625) {
+    if (FUNCTION > 1625 && FUNCTION < 1635) {
 
       Serial.println("HORN 3");
-      Serial.println(channels[16]);
-    }
-    if (FUNCTION > 9999 && FUNCTION < 8888) {
-
-      Serial.println("HORN 4");
-      Serial.println(channels[16]);
+      digitalWrite(sound3, HIGH);  // toggle state
     }
   }
 
@@ -279,6 +290,21 @@ void loop() {
     //    Serial.println(channels[16]);
   }
 
+  if (FUNCTION > 1800 && FUNCTION < 1820) {
+    pwm.writeMicroseconds(camswitch, 900);
+    Serial.println("camera 1");
+    //  Serial.println(channels[16]);
+  }
+    if (FUNCTION > 1830 && FUNCTION < 1850) {
+    pwm.writeMicroseconds(camswitch, 1200);
+    Serial.println("camera 2");
+    //  Serial.println(channels[16]);
+  }
+    if (FUNCTION > 1860 && FUNCTION < 1890) {
+    pwm.writeMicroseconds(camswitch, 1800);
+    Serial.println("camera 3");
+    //  Serial.println(channels[16]);
+  }
   else if (FUNCTION >= 2000) {
     functionselect = 11;
   }
@@ -291,20 +317,20 @@ void loop() {
     pwm.writeMicroseconds(smokethrottle, PWMLow);
   }
   if     (THRM == 1) {
-    pwm.writeMicroseconds(smokethrottle, PWMHigh);
+    pwm.writeMicroseconds(smokethrottle, 1700);
   }
   if     (THRM == 2) {
-    pwm.writeMicroseconds(smokethrottle, ch15);
+    pwm.writeMicroseconds(smokethrottle, (ch3 - 300));
   }
   if     (THRO == 1) {
     pwm.writeMicroseconds(soundthrottle, PWMMid);
   }
   if     (THRO == 2) {
-    pwm.writeMicroseconds(soundthrottle, ch15);
+    pwm.writeMicroseconds(soundthrottle, (ch3 - 150));
   }
 
-  pwm.writeMicroseconds(crane, ch14);
-  pwm.writeMicroseconds(campan, ch13);
+  pwm.writeMicroseconds(crane, ch9);
+  pwm.writeMicroseconds(campan, ch12);
 
   //Serial.println(channels[16]);
   //Serial.println(channels[16]);
@@ -430,8 +456,8 @@ void MavLink_receive()
             mavlink_heartbeat_t hb;
             mavlink_msg_heartbeat_decode(&msg, &hb);
 
-            Serial.print("\nFlight Mode: (10 ");
-            Serial.println(hb.custom_mode);
+          //  Serial.print("\nFlight Mode: (10 ");
+           // Serial.println(hb.custom_mode);
             //  Serial.print("Type: ");
             //  Serial.println(hb.type);
             //  Serial.print("Autopilot: ");
@@ -461,8 +487,8 @@ void MavLink_receive()
           {
             mavlink_rc_channels_t chs;
             mavlink_msg_rc_channels_decode(&msg, &chs);
-            Serial.print("Chanel 1: ");
-            Serial.println(chs.chan1_raw );
+            //   Serial.print("Chanel 1: ");
+            //  Serial.println(chs.chan1_raw );
             ch1  = (chs.chan1_raw);
             ch2  = (chs.chan2_raw);
             ch3  = (chs.chan3_raw);
@@ -480,25 +506,23 @@ void MavLink_receive()
             ch15 = (chs.chan15_raw);
             ch16 = (chs.chan16_raw);
           }
-          /*    case MAVLINK_MSG_ID_RC_CHANNELS_SCALED:  // #35
-                {
-                  mavlink_rc_channels_scaled_t RCCHANNEL;
-                  mavlink_msg_rc_channels_scaled_decode(&msg, &RCCHANNEL);
-                  Serial.print("Chanel 1 scaled: ");
-                  int RAW_SERVO = RCCHANNEL.chan1_scaled;
-                  Serial.println(RAW_SERVO);
-                  Serial.print("Chanel 1 (raw): ");
-                  Serial.println(RCCHANNEL.chan5_scaled);
-                  Serial.print("Drei Kanal: ");
-                  Serial.println(mavlink_msg_rc_channels_scaled_get_chan6_scaled(&msg));
-                  Serial.print("Schub: ");
-                  Serial.println(mavlink_msg_rc_channels_scaled_get_chan5_scaled(&msg));
-                }*/
+          
+        case MAVLINK_MSG_ID_SERVO_OUTPUT_RAW:  // #35
+          {
+            mavlink_servo_output_raw_t SERVOCHANNEL;
+            mavlink_msg_servo_output_raw_decode(&msg, &SERVOCHANNEL);
+            
+            
+          //  Serial.println(SERVOCHANNEL.servo6_raw);
+         //   Serial.print("Chanel 1 (raw): ");
+
       }
     }
   }
 
 }
+}
+
 
 
 //function called by arduino to read any MAVlink messages sent by serial communication from flight controller to arduino
