@@ -62,7 +62,6 @@ NeoPixelConnect p(16, 1, pio0, 0);
 
 
 
-
 int ch1  = 0;
 int ch2  = 0;
 int ch3  = 0;
@@ -80,10 +79,10 @@ int ch14 = 0;
 int ch15 = 0;
 int ch16 = 0;
 
-#define soundbusy        29
-#define sound1           28
-#define sound2           27
-#define sound3           26
+#define soundbusy        26
+#define sound1           27
+#define sound2           28
+#define sound3           29
 
 int soundon = 0;
 
@@ -100,6 +99,7 @@ int THRM = 0;
 int smthrottlepwm;
 int sothrottlepwm;
 int cranepwm;
+int campwm;
 
 uint16_t channels[16];
 bool failSafe;
@@ -161,7 +161,10 @@ void setup()
 
 
   digitalWrite(ledPin, LOW);
-
+  
+digitalWrite(sound1, HIGH);
+digitalWrite(sound2, HIGH);
+digitalWrite(sound3, HIGH);
   request_datastream();
 
 
@@ -182,9 +185,9 @@ void loop() {
   if (FUNCTION <= 1000) {
     pwm.writeMicroseconds(fwinch, 1300);
     pwm.writeMicroseconds(twinch, 1300);
-    digitalWrite(sound1, LOW);
-    digitalWrite(sound2, LOW);
-    digitalWrite(sound3, LOW);
+digitalWrite(sound1, HIGH);
+digitalWrite(sound2, HIGH);
+digitalWrite(sound3, HIGH);
    Serial.println("IDLE");
 
   }
@@ -260,23 +263,23 @@ void loop() {
 
   soundon = digitalRead(soundbusy);
 
-  if (soundon = LOW) {
+//  if (soundon = LOW) {
 
     if (FUNCTION > 1600 && FUNCTION < 1610) {
       Serial.println("HORN 1");
-      digitalWrite(sound1, HIGH);  // toggle state
+      digitalWrite(sound1, LOW);  // toggle state
     }
     if (FUNCTION > 1610 && FUNCTION < 1620) {
 
       Serial.println("HORN 2");
-      digitalWrite(sound2, HIGH);  // toggle state
+      digitalWrite(sound2, LOW);  // toggle state
     }
     if (FUNCTION > 1625 && FUNCTION < 1635) {
 
       Serial.println("HORN 3");
-      digitalWrite(sound3, HIGH);  // toggle state
+      digitalWrite(sound3, LOW);  // toggle state
     }
-  }
+ // }
 
 
   if (FUNCTION > 1725 && FUNCTION < 1745) {
@@ -329,13 +332,16 @@ void loop() {
     pwm.writeMicroseconds(soundthrottle, (ch3 - 150));
   }
 
-  pwm.writeMicroseconds(crane, ch9);
-  pwm.writeMicroseconds(campan, ch12);
+ // 
+ 
 
   //Serial.println(channels[16]);
   //Serial.println(channels[16]);
 
-
+cranepwm = map(ch9, 1000, 2000, 350, 2400);
+campwm = map(ch12, 1000, 2000, 500, 2500);
+pwm.writeMicroseconds(crane, cranepwm);
+ pwm.writeMicroseconds(campan, campwm);
 }
 
 
